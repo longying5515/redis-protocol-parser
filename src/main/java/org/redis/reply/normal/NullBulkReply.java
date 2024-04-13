@@ -1,6 +1,6 @@
-package org.redis.consts.normal;
+package org.redis.reply.normal;
 
-import org.redis.Reply;
+import org.redis.reply.Reply;
 
 public class NullBulkReply implements Reply {
     private static final byte[] nullBulkBytes = "$-1\r\n".getBytes();

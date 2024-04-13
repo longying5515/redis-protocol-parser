@@ -1,6 +1,6 @@
-package org.redis.consts.error.impl;
+package org.redis.reply.error;
 
-import org.redis.consts.error.ErrorReply;
+import org.redis.reply.ErrorReply;
 
 public class UnknownErrReply implements ErrorReply {
     private static final byte[] unknownErrBytes = "-Err unknown\r\n".getBytes();

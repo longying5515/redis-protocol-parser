@@ -1,4 +1,4 @@
-package org.redis;
+package org.redis.reply;
 
 public interface Reply {
     byte[] toBytes();
