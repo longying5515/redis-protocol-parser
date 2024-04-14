@@ -64,17 +64,71 @@ public class RedisProtocolParser {
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
-    private void parseLine(String line, ReadState state, BlockingQueue<Payload> queue) throws InterruptedException {
-        if (line.startsWith("$")) {
-            // handle bulk reply header
-            // just a simplified example
-        } else {
-            // handle other types
+    private void parseLine(String line, ReadState state, BlockingQueue<Payload> queue) throws Exception {
+        try {
+            if (line.startsWith("+")) {
+                // Simple String
+                handleSimpleString(line, state, queue);
+            } else if (line.startsWith("-")) {
+                // Error
+                handleError(line, state, queue);
+            } else if (line.startsWith(":")) {
+                // Integer
+                handleInteger(line, state, queue);
+            } else if (line.startsWith("$")) {
+                // Bulk string
+                handleBulkString(line, state, queue);
+            } else if (line.startsWith("*")) {
+                // Multi bulk reply
+                handleMultiBulkHeader(line, state, queue);
+            }
+        } catch (Exception e) {
+            queue.put(new Payload(null, e)); // Send error in payload
         }
-        // Suppose we are done with parsing
-        queue.put(new Payload(new StatusReply("OK"), null));
+    }
+
+    private void handleSimpleString(String line, ReadState state, BlockingQueue<Payload> queue) throws InterruptedException {
+        // Assuming simple strings are direct replies
+        queue.put(new Payload(new StatusReply(line.substring(1)), null));
+    }
+
+    private void handleError(String line, ReadState state, BlockingQueue<Payload> queue) throws InterruptedException {
+        // Send error message
+        queue.put(new Payload(null, new Exception(line.substring(1))));
+    }
+
+    private void handleInteger(String line, ReadState state, BlockingQueue<Payload> queue) throws InterruptedException {
+        // Process integer
+        long number = Long.parseLong(line.substring(1));
+        queue.put(new Payload(new IntReply(number), null));
+    }
+
+    private void handleBulkString(String line, ReadState state, BlockingQueue<Payload> queue) throws InterruptedException {
+        // Bulk string length
+        int length = Integer.parseInt(line.substring(1));
+        if (length == -1) {
+            // Null bulk reply
+            queue.put(new Payload(null, null));
+        } else {
+            // Next line(s) will contain the data
+            state.setBulkLen(length);
+        }
+    }
+
+    private void handleMultiBulkHeader(String line, ReadState state, BlockingQueue<Payload> queue) throws InterruptedException {
+        // Multi bulk count
+        int count = Integer.parseInt(line.substring(1));
+        if (count == -1) {
+            // Null multi bulk reply
+            queue.put(new Payload(null, null));
+        } else {
+            state.setExpectedArgsCount(count);
+            state.setReadingMultiLine(true);
+        }
     }
 
 
@@ -93,6 +147,28 @@ public class RedisProtocolParser {
             }
         } catch (NumberFormatException e) {
             throw new Exception("Protocol error: " + msg, e);
+        }
+    }
+    public void parseMultiBulkHeader(String msg, ReadState state) throws Exception {
+        try {
+            // Strip out the first character and the CRLF at the end before parsing
+            long expectedLine = Long.parseLong(msg.substring(1, msg.length() - 2));
+            if (expectedLine == 0) {
+                state.setExpectedArgsCount(0);
+            } else if (expectedLine > 0) {
+
+                state.setMsgType(msg.substring(0,1).getBytes()[0]);
+                state.setReadingMultiLine(true);
+                state.setExpectedArgsCount((int) expectedLine);
+                // Initialize the args list size if necessary
+                for (int i = 0; i < expectedLine; i++) {
+                    state.addArg(new byte[0]);  // Preallocate space with empty arrays
+                }
+            } else {
+                throw new Exception("Protocol error: Invalid number of lines " + expectedLine);
+            }
+        } catch (NumberFormatException e) {
+            throw new Exception("Protocol error while parsing multi bulk header: " + msg, e);
         }
     }
 
