@@ -5,6 +5,9 @@ import org.redis.reply.Reply;
 
 import java.util.Arrays;
 
+/**
+ *  回复：*3\r\n$3\r\nSET\r\n$3\r\nkey\r\n$5\r\nvalue\r\n
+ */
 public class MultiBulkReply implements Reply {
     private byte[][] args;
 
