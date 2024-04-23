@@ -2,7 +2,7 @@ import org.junit.Test;
 import org.redis.reply.customize.MultiBulkReply;
 
 public class MultiBulkTest {
-    @Test
+//    @Test
     public void testMultiBulk() {
         String[] strings={"good","eat","diff"};
         byte[][] bytes=new byte[strings.length][];

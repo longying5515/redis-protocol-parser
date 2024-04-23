@@ -15,18 +15,18 @@ public class ParseStream implements Callable<Payload> {
         this.reader = new BufferedReader(new InputStreamReader(inputStream));
     }
 
+    public ParseStream() {
+
+    }
+
+    /**
+     * 解析出payload结构体
+     * @return
+     * @throws Exception
+     */
     @Override
     public Payload call() throws Exception {
-        ReadState state = new ReadState();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            // Assume readLine and parse logic is correctly implemented
-            byte[] msg = line.getBytes();
-            // Dummy example of handling parsed line
-            if (state.getExpectedArgsCount() > 0 && state.getArgs().length == state.getExpectedArgsCount()) {
-                return new Payload(new BulkReply(msg), null);
-            }
-        }
-        return new Payload(null, new Exception("Stream ended unexpectedly"));
+        RedisProtocolParser parser = new RedisProtocolParser(reader);
+        return null;
     }
 }

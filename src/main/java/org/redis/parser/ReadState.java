@@ -66,4 +66,19 @@ public class ReadState {
             addArg(line);
         }
     }
+
+    public void resetBulkLen() {
+        bulkLen = 0;
+    }
+
+
+    public void reset() {
+        readingMultiLine = false;
+        expectedArgsCount = 0;
+        msgType = 0;
+        args = new byte[10][];
+        argCount = 0;
+        bulkLen = 0;
+    }
+
 }

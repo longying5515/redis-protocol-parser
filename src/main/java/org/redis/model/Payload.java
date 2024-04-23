@@ -12,6 +12,10 @@ public class Payload {
         this.err = err;
     }
 
+    public Payload() {
+
+    }
+
     public Reply getData() {
         return data;
     }
