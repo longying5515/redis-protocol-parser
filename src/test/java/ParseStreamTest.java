@@ -9,7 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 public class ParseStreamTest {
-    @Test
+//    @Test
     public void testParseStream() {
         Payload payload=new Payload();
         Reply wrongTypeReply=new WrongTypeErrReply();

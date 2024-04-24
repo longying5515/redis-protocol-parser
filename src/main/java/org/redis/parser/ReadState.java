@@ -47,25 +47,7 @@ public class ReadState {
         System.arraycopy(args, 0, newArgs, 0, args.length);
         args = newArgs;
     }
-    public void readBody(byte[] msg) throws Exception {
-        byte[] line = Arrays.copyOf(msg, msg.length - 2); // 去掉末尾的\r\n
 
-        if (line[0] == '$') {
-            String lengthStr = new String(line, 1, line.length - 1);
-            try {
-                long len = Long.parseLong(lengthStr);
-                bulkLen = len;
-                if (bulkLen <= 0) { // 如果长度为0或负数，处理为空bulk
-                    addArg(new byte[0]);
-                    bulkLen = 0;
-                }
-            } catch (NumberFormatException e) {
-                throw new Exception("Protocol error: " + lengthStr, e);
-            }
-        } else {
-            addArg(line);
-        }
-    }
 
     public void resetBulkLen() {
         bulkLen = 0;

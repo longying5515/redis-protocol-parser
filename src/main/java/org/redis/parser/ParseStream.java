@@ -26,7 +26,7 @@ public class ParseStream implements Callable<Payload> {
      */
     @Override
     public Payload call() throws Exception {
-        RedisProtocolParser parser = new RedisProtocolParser(reader);
+//        RedisProtocolParser parser = new RedisProtocolParser(reader);
         return null;
     }
 }

@@ -31,12 +31,10 @@ public class RedisProtocolParser {
     public static void parse0(InputStreamReader reader, Channel<Payload> ch) throws InterruptedException {
         try (BufferedReader bufReader = new BufferedReader(reader)) {
             ReadState state = new ReadState();
-            String msg;
             while (true) {
                 try {
-                    msg = bufReader.readLine();
-                    if (msg == null) throw new IOException("Stream closed");
-
+                    byte[] bytes = readLine(bufReader,state);
+                    String msg =new String(bytes);
                     if (!state.isReadingMultiLine()) {
                         if (msg.startsWith("*")) {
                             handleMultiBulkHeader(msg.getBytes(), state);
@@ -104,8 +102,8 @@ public class RedisProtocolParser {
                 throw new IOException("Protocol error: Incorrect ending");
             }
         } else {
-            msg = new byte[(int) (state.getBulkLen() + 2)];
             String line = bufferedReader.readLine();
+            line += "\r\n";
             msg = line.getBytes();
 
             // Ensure the bulk message ends with CRLF
@@ -144,7 +142,8 @@ public class RedisProtocolParser {
 
     private static void handleMultiBulkHeader(byte[] msg, ReadState state) throws InterruptedException, MyCustomException {
         // Multi bulk count
-        int count = Integer.parseInt(new String(msg, 1, msg.length - 2));
+        int count = Integer.parseInt(new String(msg, 1, msg.length-3));
+        state.setBulkLen(count);
         if (count == 0) {
             state.setExpectedArgsCount(0);
         } else if (count > 0) {
@@ -159,7 +158,7 @@ public class RedisProtocolParser {
 
     private static void parseBulkHeader(byte[] msg, ReadState state) throws Exception {
         try {
-            long bulkLen = Long.parseLong(new String(msg, 1, msg.length - 2));
+            long bulkLen = Long.parseLong(new String(msg, 1, msg.length - 3));
             if (bulkLen == -1) {
                 state.setBulkLen(-1);
             } else if (bulkLen > 0) {
